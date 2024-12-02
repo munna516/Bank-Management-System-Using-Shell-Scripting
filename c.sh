@@ -82,9 +82,21 @@ switch_to_user() {
 
 # Function to create an account (Admin only)
 create_account() {
+    # Ensure the file exists
+    if [ ! -f "$BANK_DB" ]; then
+        touch "$BANK_DB"
+    fi
+
     if [ $ADMIN_MODE -eq 1 ]; then
         echo "Enter Account Number:"
         read acc_no
+
+        # Check if account number already exists
+        if grep -q "^$acc_no " "$BANK_DB"; then
+            echo "Account Number $acc_no already exists. Cannot create a duplicate account."
+            return
+        fi
+
         echo "Enter Name:"
         read name
         echo "Enter Initial Deposit:"
@@ -92,14 +104,13 @@ create_account() {
         echo "Set Password for this account:"
         read -s acc_password
 
-        echo "$acc_no $name $deposit $acc_password" >> $BANK_DB
+        echo "$acc_no $name $deposit $acc_password" >> "$BANK_DB"
         echo "Account created successfully!"
-        echo "$acc_no Created account with initial deposit of $deposit" >> $TRANSACTION_HISTORY
+        echo "$acc_no Created account with initial deposit of $deposit" >> "$TRANSACTION_HISTORY"
     else
         echo "Access Denied! Only Admin can create accounts."
     fi
 }
-
 # Function to view account details with password verification
 view_account() {
     echo "Enter Account Number:"
